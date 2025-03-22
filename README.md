@@ -17,7 +17,7 @@
 
 ### **1. Clone the Repository**  
 ```bash
-git clone https://github.com/your-username/News-Summary.git
+git clone https://github.com/Akshay-Kumar/News-Summary.git
 cd News-Summary
 ```
 
@@ -29,7 +29,11 @@ npm install
 ### **3. Set Up Environment Variables**  
 Create a `.env` file in the root directory and add:  
 ```plaintext
-NEWS_API_KEY=your_api_key_here
+MONGO_URI=<mongodb Atlas connection string>
+JWT_SECRET=<jwt_secret_key>
+NEWS_API_KEY=<newsapi key>
+HF_TOKEN=<hugging face api key>
+OPENAI_API_KEY=<open api key>
 PORT=5000
 ```
 
