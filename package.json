@@ -1,0 +1,27 @@
+{
+  "name": "news-app-backend",
+  "version": "1.0.0",
+  "description": "Backend for News Summary Web App",
+  "main": "app.js",
+  "scripts": {
+    "start": "node ./bin/www",
+    "dev": "nodemon ./bin/www"
+  },
+  "dependencies": {
+    "axios": "^1.8.3",
+    "bcryptjs": "^2.4.3",
+    "cors": "^2.8.5",
+    "dotenv": "^16.0.0",
+    "express": "^4.18.2",
+    "jsonwebtoken": "^9.0.0",
+    "mongoose": "^7.0.0",
+    "natural": "^8.0.1",
+    "node-fetch": "^3.3.0",
+    "node-summarizer": "^1.0.7",
+    "node-sumuparticles": "^0.1.4",
+    "openai": "^3.3.0"
+  },
+  "devDependencies": {
+    "nodemon": "^2.0.20"
+  }
+}
