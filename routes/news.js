@@ -10,11 +10,13 @@ async function processArticles(data, category) {
     const articlePromises = data.articles.map(async (article) => {
         try {
             // Use NewsAPI's content if available, fallback to description
-            /*
+
             const contentToSummarize = article.content || article.description || '';
             const summary = summarizeArticle(contentToSummarize);
+            const summary_txt = article.description || summary;
             console.log("summary:",summary)
-            */
+            console.log("summary_txt:",summary_txt)
+
             return {
                 title: article.title,
                 description: article.description,
