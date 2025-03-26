@@ -10,17 +10,16 @@ async function processArticles(data, category) {
     const articlePromises = data.articles.map(async (article) => {
         try {
             // Use NewsAPI's content if available, fallback to description
-
             const contentToSummarize = article.content || article.description || '';
             const summary = summarizeArticle(contentToSummarize);
             const summary_txt = article.description || summary;
-            console.log("summary:",summary)
-            console.log("summary_txt:",summary_txt)
+            console.log("summary:", summary);
+            console.log("summary_txt:", summary_txt);
 
             return {
                 title: article.title,
                 description: article.description,
-                summary: article.description,
+                summary: summary_txt,  // use the summarized text
                 url: article.url,
                 urlToImage: article.urlToImage,
                 category: category || 'general',
@@ -41,11 +40,24 @@ async function processArticles(data, category) {
 }
 
 router.get('/', async (req, res) => {
-    const { category } = req.query;
+    // Read country, source, and category from query parameters
+    const { category, country, source } = req.query;
     try {
-        const url = `https://newsapi.org/v2/top-headlines?country=us&pageSize=50${
-            category ? `&category=${category}` : ''
-        }&apiKey=${process.env.NEWS_API_KEY}`;
+        let url = `https://newsapi.org/v2/top-headlines?pageSize=50&apiKey=${process.env.NEWS_API_KEY}`;
+
+        // Prioritize source over country since NewsAPI ignores country if source is provided
+        if (source) {
+            url += `&sources=${source}`;
+        } else if (country) {
+            url += `&country=${country}`;
+        } else {
+            // Default to US if no country or source is provided
+            url += `&country=us`;
+        }
+
+        if (category) {
+            url += `&category=${category}`;
+        }
 
         const response = await fetch(url);
         if (!response.ok) throw new Error(`NewsAPI error: ${response.statusText}`);
@@ -53,7 +65,8 @@ router.get('/', async (req, res) => {
         const data = await response.json();
         const articles = await processArticles(data, category);
 
-        res.json(articles.filter(a => a.title !== '[Removed]')); // Filter removed articles
+        // Filter out removed articles
+        res.json(articles.filter(a => a.title !== '[Removed]'));
 
     } catch (err) {
         console.error('News route error:', err);
