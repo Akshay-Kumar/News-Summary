@@ -44,20 +44,27 @@ router.get('/', async (req, res) => {
     const { category, country, source } = req.query;
     try {
         let url = `https://newsapi.org/v2/top-headlines?pageSize=50&apiKey=${process.env.NEWS_API_KEY}`;
-
+        //let url = `https://newsapi.org/v2/everything?pageSize=50&sortBy=publishedAt&apiKey=${process.env.NEWS_API_KEY}`;
         // Prioritize source over country since NewsAPI ignores country if source is provided
+
+        //if source is selected, country and category cannot be added to teh query string
         if (source) {
             url += `&sources=${source}`;
-        } else if (country) {
-            url += `&country=${country}`;
-        } else {
-            // Default to US if no country or source is provided
-            url += `&country=us`;
+        }
+        else{
+            if (country) {
+                url += `&country=${country}`;
+            } else {
+                // Default to US if no country or source is provided
+                url += `&country=us`;
+            }
+
+            if (category) {
+                url += `&category=${category}`;
+            }
         }
 
-        if (category) {
-            url += `&category=${category}`;
-        }
+        console.log("url:",url)
 
         const response = await fetch(url);
         if (!response.ok) throw new Error(`NewsAPI error: ${response.statusText}`);
