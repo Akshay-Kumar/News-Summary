@@ -7,6 +7,7 @@ require('dotenv').config();
 const authRoutes = require('./routes/auth');
 const newsRoutes = require('./routes/news');
 const bookmarkRoutes = require('./routes/bookmarks');
+const newsDataRoutes = require('./routes/newsdata');
 
 const app = express();
 
@@ -24,5 +25,6 @@ app.use(cors());
 app.use('/api/auth', authRoutes);
 app.use('/api/news', newsRoutes);
 app.use('/api/bookmarks', bookmarkRoutes);
+app.use('/api/newsdata', newsDataRoutes);
 
 module.exports = app;
