@@ -65,18 +65,18 @@ router.get('/', async (req, res) => {
                     url += `&category=${category}`;
                 }
             }
-        }
 
-        //set default language as english
-        if (language) {
-            url += `&language=${language}`;
-        }
-        else{
-            url += `&language=en`;
-        }
+            //set default language as english
+            if (language) {
+                url += `&language=${language}`;
+            }
+            else{
+                url += `&language=en`;
+            }
 
-        // remove duplicate articles
-        url += `&removeduplicate=1`;
+            // remove duplicate articles
+            url += `&removeduplicate=1`;
+        }
 
         console.log("url:",url)
 
