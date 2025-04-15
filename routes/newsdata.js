@@ -44,17 +44,45 @@ router.get('/', async (req, res) => {
     const { category, country, source, language } = req.query;
     try {
         let url = `https://newsdata.io/api/1/latest?apikey=${process.env.NEWSDATA_API_KEY}`;
-
-        //if source is selected, country and category cannot be added to teh query string
+        /*
+        if source is selected, country and category cannot be added to the query string only while using newsapi.org
+        this does not apply if using newsdata.io api
+        */
         if (source) {
             url += `&domain=${source}`;
         }
+        if (country) {
+            url += `&country=${country}`;
+        }
+
+        if (category) {
+            if(category === 'general'){
+                url += `&category=top`;
+            }
+            else{
+                url += `&category=${category}`;
+            }
+        }
+
+        //set default language as english
+        if (language) {
+            url += `&language=${language}`;
+        }
+        else{
+            url += `&language=en`;
+        }
+
+        // remove duplicate articles
+        url += `&removeduplicate=1`;
+
+        // uncomment this code if using newsapi.org
+        /*
         else{
             if (country) {
                 url += `&country=${country}`;
             } else {
                 // Default to US if no country or source is provided
-                url += `&country=us`;
+                url += `&country=ca`;
             }
 
             if (category) {
@@ -77,6 +105,7 @@ router.get('/', async (req, res) => {
             // remove duplicate articles
             url += `&removeduplicate=1`;
         }
+        */
 
         console.log("url:",url)
 
