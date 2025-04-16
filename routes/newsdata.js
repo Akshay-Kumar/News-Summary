@@ -20,6 +20,7 @@ async function processArticles(data, category) {
                 title: article.title,
                 description: article.description,
                 summary: summary_txt,  // use the summarized text
+                content: article.content, // get full content of the article
                 url: article.link,
                 urlToImage: article.image_url,
                 category: category || 'top',
