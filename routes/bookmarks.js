@@ -37,7 +37,7 @@ router.delete('/:id', auth, async (req, res) => {
         const bookmark = await Bookmark.findById(req.params.id);
         if (!bookmark) return res.status(404).json({ msg: 'Bookmark not found' });
         if (bookmark.user.toString() !== req.user.id) return res.status(401).json({ msg: 'User not authorized' });
-        await bookmark.remove();
+        await Bookmark.findByIdAndDelete(bookmark.id);
         res.json({ msg: 'Bookmark removed' });
     } catch (err) {
         console.error(err.message);
