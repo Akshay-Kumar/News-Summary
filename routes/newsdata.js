@@ -44,7 +44,7 @@ router.get('/', async (req, res) => {
     // Read country, source, and category from query parameters
     const { category, country, source, language } = req.query;
     try {
-        const no_lang_domain = ['theverge', 'reuters', 'aljazeera'];
+        const no_lang_domain = ['theverge', 'reuters', 'aljazeera', 'indianexpress'];
         let url = `https://newsdata.io/api/1/latest?apikey=${process.env.NEWSDATA_API_KEY}`;
 
         if (source) {
@@ -67,7 +67,7 @@ router.get('/', async (req, res) => {
         }
 
         // set default language as english
-        // if source is theverge, reuters or aljazeera do not use default language
+        // if source do not use eng language
         if (!no_lang_domain.includes(source)){
             if (language) {
                 url += `&language=${language}`;
