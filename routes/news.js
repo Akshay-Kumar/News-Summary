@@ -55,8 +55,8 @@ router.get('/', async (req, res) => {
             if (country) {
                 url += `&country=${country}`;
             } else {
-                // Default to US if no country or source is provided
-                url += `&country=us`;
+                // Default to CA if no country or source is provided
+                url += `&country=ca`;
             }
 
             if (category) {
