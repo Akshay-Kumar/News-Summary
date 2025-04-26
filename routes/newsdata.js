@@ -44,48 +44,18 @@ router.get('/', async (req, res) => {
     // Read country, source, and category from query parameters
     const { category, country, source, language } = req.query;
     try {
+        const no_lang_domain = ['theverge', 'reuters', 'aljazeera'];
         let url = `https://newsdata.io/api/1/latest?apikey=${process.env.NEWSDATA_API_KEY}`;
-        /*
-        if source is selected, country and category cannot be added to the query string only while using newsapi.org
-        this does not apply if using newsdata.io api
-        */
+
         if (source) {
             url += `&domain=${source}`;
         }
+
         if (country) {
             url += `&country=${country}`;
         }
 
-        if (category) {
-            if(category === 'general'){
-                url += `&category=top`;
-            }
-            else{
-                url += `&category=${category}`;
-            }
-        }
-
-        //set default language as english
-        if (language) {
-            url += `&language=${language}`;
-        }
-        else{
-            url += `&language=en`;
-        }
-
-        // remove duplicate articles
-        url += `&removeduplicate=1`;
-
-        // uncomment this code if using newsapi.org
-        /*
-        else{
-            if (country) {
-                url += `&country=${country}`;
-            } else {
-                // Default to US if no country or source is provided
-                url += `&country=ca`;
-            }
-
+        if (source!=='theverge'){
             if (category) {
                 if(category === 'general'){
                     url += `&category=top`;
@@ -94,19 +64,21 @@ router.get('/', async (req, res) => {
                     url += `&category=${category}`;
                 }
             }
+        }
 
-            //set default language as english
+        // set default language as english
+        // if source is theverge, reuters or aljazeera do not use default language
+        if (!no_lang_domain.includes(source)){
             if (language) {
                 url += `&language=${language}`;
             }
             else{
                 url += `&language=en`;
             }
-
-            // remove duplicate articles
-            url += `&removeduplicate=1`;
         }
-        */
+
+        // remove duplicate articles
+        url += `&removeduplicate=1`;
 
         console.log("url:",url)
 
