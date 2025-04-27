@@ -25,7 +25,10 @@ async function processArticles(data, category) {
                 urlToImage: article.image_url,
                 category: category || 'top',
                 publishedAt: article.pubDate,
-                source: article.source_name
+                source_name: article.source_name,
+                source_url: article.source_url,
+                source_icon: article.source_icon,
+                language: article.language
             };
         } catch (err) {
             console.error(`Error processing article ${article.title}:`, err);
