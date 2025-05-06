@@ -16,7 +16,7 @@
     "jsonwebtoken": "^9.0.0",
     "mongoose": "^7.0.0",
     "natural": "^8.0.1",
-    "node-fetch": "^3.3.0",
+    "node-fetch": "^3.3.2",
     "node-summarizer": "^1.0.7",
     "node-sumuparticles": "^0.1.4",
     "openai": "^3.3.0"

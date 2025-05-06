@@ -6,6 +6,11 @@ require('dotenv').config();
 const fetch = (...args) => import('node-fetch').then(({ default: fetch }) => fetch(...args));
 const summarizeArticle = require('../utils/summarizer');
 
+// this function scrapes the original news article using the link and returns the content fo the news article
+async function getFullArticleContent(url, source) {
+    //TO DO
+}
+
 async function processArticles(data, category) {
     const articlePromises = data.results.map(async (article) => {
         try {
@@ -15,6 +20,8 @@ async function processArticles(data, category) {
             const summary_txt = article.description || summary;
             console.log("summary:", summary);
             console.log("summary_txt:", summary_txt);
+
+            // const articleContent = await getFullArticleContent(article.link, article.source_name);
 
             return {
                 title: article.title,
