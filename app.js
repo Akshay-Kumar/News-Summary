@@ -2,7 +2,9 @@
 const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
-require('dotenv').config();
+const dotenv = require('dotenv');
+// Load env vars
+dotenv.config();
 
 const authRoutes = require('./routes/auth');
 const newsRoutes = require('./routes/news');
@@ -10,15 +12,9 @@ const bookmarkRoutes = require('./routes/bookmarks');
 const newsDataRoutes = require('./routes/newsdata');
 const newsDataHubRoutes = require('./routes/newsdatahub');
 const worldnewsRoutes = require('./routes/worldnews');
+const worldnewsAdminRoute = require('./routes/worldnews_admin');
 
 const app = express();
-
-// Connect to MongoDB
-mongoose
-    .connect(process.env.MONGO_URI, { useNewUrlParser: true, useUnifiedTopology: true })
-    .then(() => console.log('MongoDB connected'))
-    .catch((error) => console.error('MongoDB connection error:', error));
-
 // Middleware
 app.use(express.json());
 app.use(cors());
@@ -30,5 +26,6 @@ app.use('/api/bookmarks', bookmarkRoutes);
 app.use('/api/newsdata', newsDataRoutes);
 app.use('/api/newsdatahub', newsDataHubRoutes);
 app.use('/api/worldnews', worldnewsRoutes);
+app.use('/api/worldnews_admin', worldnewsAdminRoute);
 
 module.exports = app;

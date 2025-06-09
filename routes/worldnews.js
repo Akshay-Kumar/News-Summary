@@ -3,8 +3,9 @@ const express = require('express');
 const router = express.Router();
 const axios = require('axios');
 require('dotenv').config();
-const summarizeArticle = require('../utils/summarizer');
+const WorldNewsArticle = require('../models/WorldNewsArticle');
 const WORLD_NEWS_BASE_URL = 'https://api.worldnewsapi.com';
+const NewsService = require('../services/NewsService');
 
 async function processArticles(data, category, source) {
     const articlePromises = data.news.map(async (article) => {
@@ -43,46 +44,41 @@ async function processArticles(data, category, source) {
 router.get('/', async (req, res) => {
     const { category, country, source, language, text } = req.query;
     try {
-        let num_of_articles_to_fetch = 25;
-        let url = `${WORLD_NEWS_BASE_URL}/search-news?api-key=${process.env.WORLDNEWS_API_KEY}`;
-
-        // World News API allows categories — map your "general" to nothing
-        if (category && category !== 'general') {
-            url += `&categories=${category}`;
+        let api_article_fetch_limit = 25;
+        let db_article_fetch_limit = 25;
+        let add_params = '&sort=publish-time&sort-direction=DESC';
+        let api_route = 'search-news';
+        let params = {
+            base_url: WORLD_NEWS_BASE_URL,
+            api_route: api_route,
+            api_key: process.env.WORLDNEWS_API_KEY,
+            country: country,
+            source: source,
+            text: text,
+            category: category,
+            language: language,
+            article_fetch_limit: api_article_fetch_limit,
+            add_params: add_params
         }
-
-        // World News API allows search text
-        if (text) {
-            url += `&text=${encodeURIComponent(text)}`;
-        }
-
-        // either news-source or source-country must be used not together
-        if(country){
-            url += `&source-country=${country}`
-        }
-        else if(source){
-            url += `&news-sources=${source}`
-        }
-
-        // Set language, default = en
-        url += `&language=${language || 'en'}`;
-
-        // limit number of results
-        url += `&number=${num_of_articles_to_fetch}`;
-
-        // sort by publish date in descending order
-        url += `&sort=publish-time&sort-direction=DESC`;
-
+        let url = NewsService.buildUrl(params);
 
         console.log("World News API url:", url);
 
-        const response = await axios.get(url);
-        const data = response.data;
-
-        console.log("available articles:", data.available);
-
-        const articles = await processArticles(data, category, source);
-
+        // build params to fetch news
+        let params2 = {
+            url: url,
+            country: country,
+            source: source,
+            text: text,
+            category: category,
+            language: language,
+            fromDate: null,
+            toDate: null,
+            limit: db_article_fetch_limit,
+            skip: 0
+        }
+        // fetch and cache news articles
+        const articles = await NewsService.getNewsWithFallback(params2);
         res.json(articles);
 
     } catch (err) {
