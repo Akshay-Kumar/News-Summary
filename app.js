@@ -8,6 +8,8 @@ const authRoutes = require('./routes/auth');
 const newsRoutes = require('./routes/news');
 const bookmarkRoutes = require('./routes/bookmarks');
 const newsDataRoutes = require('./routes/newsdata');
+const newsDataHubRoutes = require('./routes/newsdatahub');
+const worldnewsRoutes = require('./routes/worldnews');
 
 const app = express();
 
@@ -26,5 +28,7 @@ app.use('/api/auth', authRoutes);
 app.use('/api/news', newsRoutes);
 app.use('/api/bookmarks', bookmarkRoutes);
 app.use('/api/newsdata', newsDataRoutes);
+app.use('/api/newsdatahub', newsDataHubRoutes);
+app.use('/api/worldnews', worldnewsRoutes);
 
 module.exports = app;
