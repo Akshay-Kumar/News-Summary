@@ -7,9 +7,9 @@ const refreshNews = async () => {
         try {
             console.log(`[${new Date().toISOString()}] Running getAllNews...`);
             let fetchTopNews = true;
-            let fetchNewsBySourceCountry = false;
-            let fetchNewsByCategory = false;
-            let fetchNewsByNewsSources = false;
+            let fetchNewsBySourceCountry = true;
+            let fetchNewsByCategory = true;
+            let fetchNewsByNewsSources = true;
             await NewsService.getAllNews(fetchTopNews, fetchNewsBySourceCountry, fetchNewsByCategory, fetchNewsByNewsSources);
             console.log(`[${new Date().toISOString()}]News fetched and saved.`);
         } catch (error) {
@@ -22,9 +22,9 @@ const refreshNews = async () => {
         try {
             console.log(`[${new Date().toISOString()}] Running getAllNews on startup...`);
             let fetchTopNews = true;
-            let fetchNewsBySourceCountry = false;
-            let fetchNewsByCategory = false;
-            let fetchNewsByNewsSources = false;
+            let fetchNewsBySourceCountry = true;
+            let fetchNewsByCategory = true;
+            let fetchNewsByNewsSources = true;
             await NewsService.getAllNews(fetchTopNews, fetchNewsBySourceCountry, fetchNewsByCategory, fetchNewsByNewsSources);
             console.log(`[${new Date().toISOString()}]News fetched and saved.`);
         } catch (err) {
