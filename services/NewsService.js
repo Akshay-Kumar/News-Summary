@@ -278,7 +278,7 @@ class NewsService {
                         urlToImage: article.image || '',
                         category: article.category || 'general',
                         publishedAt: new Date(article.publish_date),
-                        source_name: source || NewsService.extractSourceName(article.url) || '',
+                        source_name: NewsService.extractSourceName(article.url) || '',
                         source_country: article.source_country || '',
                         source_url: NewsService.extractSourceUrl(article.url) || '',
                         source_icon: NewsService.extractSourceIcon(article.url) || '',
