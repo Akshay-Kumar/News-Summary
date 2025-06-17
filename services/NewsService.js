@@ -42,9 +42,6 @@ class NewsService {
         try {
 
             if(fetchTopNews){
-                if(NewsService.api_quota_left < 0){
-                    return;
-                }
                 console.log("[NewsService] Fetching TopNews from API.")
                 await NewsService.getTopNews(
                     WORLD_NEWS_BASE_URL,
@@ -58,9 +55,6 @@ class NewsService {
             }
 
             if(fetchNewsBySourceCountry){
-                if(NewsService.api_quota_left < 0){
-                    return;
-                }
                 console.log("[NewsService] Fetching NewsBySourceCountry from API.")
                 await NewsService.getNewsBySourceCountry(
                     WORLD_NEWS_BASE_URL,
@@ -73,9 +67,6 @@ class NewsService {
             }
 
             if(fetchNewsByCategory){
-                if(NewsService.api_quota_left < 0){
-                    return;
-                }
                 console.log("[NewsService] Fetching NewsByCategory from API.")
                 await NewsService.getNewsByCategory(
                     WORLD_NEWS_BASE_URL,
@@ -89,9 +80,6 @@ class NewsService {
 
 
             if(fetchNewsByNewsSources){
-                if(NewsService.api_quota_left < 0){
-                    return;
-                }
                 console.log("[NewsService] Fetching NewsByNewsSources from API.")
                 await NewsService.getNewsByNewsSources(
                     WORLD_NEWS_BASE_URL,
@@ -109,10 +97,6 @@ class NewsService {
     }
 
     static async getTopNews(api_base_url, api_route, api_key, language = 'en', headlines_only = 'false', sort_by = 'publish-time', sort_direction = 'DESC'){
-        if(NewsService.api_quota_left < 0){
-            return;
-        }
-
         let top_news_params = {
             base_url: api_base_url,
             api_route: api_route,
