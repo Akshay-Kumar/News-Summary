@@ -1,0 +1,41 @@
+<!-- services/meta-data.xml -->
+<metadata>
+    <countries>
+        <country code="in">India</country>
+        <country code="ca">Canada</country>
+        <country code="us">USA</country>
+        <country code="ru">Russia</country>
+        <country code="gb">UK</country>
+        <country code="au">Australia</country>
+        <country code="de">Germany</country>
+        <country code="fr">France</country>
+        <country code="jp">Japan</country>
+        <country code="kr">South Korea</country>
+        <country code="br">Brazil</country>
+        <country code="bd">Bangladesh</country>
+        <country code="pk">Pakistan</country>
+    </countries>
+    <sources>
+        <source code="cnn">CNN</source>
+        <source code="bbc">BBC News</source>
+        <source code="theverge">The Verge</source>
+        <source code="techcrunch">TechCrunch</source>
+        <source code="nytimes">New York Times</source>
+        <source code="foxnews">Fox News</source>
+        <source code="ndtv">NDTV News</source>
+        <source code="thehindu">The Hindu</source>
+        <source code="livemint">Mint</source>
+        <source code="hindustantimes">Hindustan Times</source>
+        <source code="indiatoday">India Today</source>
+        <source code="cbc">CBC News</source>
+    </sources>
+    <categories>
+        <category code="technology">Technology</category>
+        <category code="politics">Politics</category>
+        <category code="entertainment">Entertainment</category>
+        <category code="sports">Sports</category>
+        <category code="business">Business</category>
+        <category code="education">Education</category>
+        <category code="health">Health</category>
+    </categories>
+</metadata>

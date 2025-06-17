@@ -11,6 +11,7 @@ const WorldNewsArticleSchema = new mongoose.Schema({
     category: { type: String, index: true }, // index for fast filtering
     publishedAt: { type: Date, index: true },
     source_name: { type: String, default: '' },
+    source_country: { type: String, default: '' },
     source_url: { type: String, default: '' },
     source_icon: { type: String, default: '' },
     language: { type: String, default: 'en' },

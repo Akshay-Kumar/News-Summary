@@ -3,8 +3,6 @@ const express = require('express');
 const router = express.Router();
 const axios = require('axios');
 require('dotenv').config();
-const WorldNewsArticle = require('../models/WorldNewsArticle');
-const WORLD_NEWS_BASE_URL = 'https://api.worldnewsapi.com';
 const NewsService = require('../services/NewsService');
 
 async function processArticles(data, category, source) {
@@ -44,41 +42,22 @@ async function processArticles(data, category, source) {
 router.get('/', async (req, res) => {
     const { category, country, source, language, text } = req.query;
     try {
-        let api_article_fetch_limit = 25;
         let db_article_fetch_limit = 25;
-        let add_params = '&sort=publish-time&sort-direction=DESC';
-        let api_route = 'search-news';
-        let params = {
-            base_url: WORLD_NEWS_BASE_URL,
-            api_route: api_route,
-            api_key: process.env.WORLDNEWS_API_KEY,
-            country: country,
-            source: source,
-            text: text,
-            category: category,
-            language: language,
-            article_fetch_limit: api_article_fetch_limit,
-            add_params: add_params
-        }
-        let url = NewsService.buildUrl(params);
-
-        console.log("World News API url:", url);
 
         // build params to fetch news
-        let params2 = {
-            url: url,
+        let params = {
             country: country,
             source: source,
             text: text,
             category: category,
-            language: language,
+            language: language || 'en',
             fromDate: null,
             toDate: null,
             limit: db_article_fetch_limit,
             skip: 0
         }
         // fetch and cache news articles
-        const articles = await NewsService.getNewsWithFallback(params2);
+        const articles = await NewsService.getCachedNews(params);
         res.json(articles);
 
     } catch (err) {
