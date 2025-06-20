@@ -13,6 +13,7 @@ const newsDataRoutes = require('./routes/newsdata');
 const newsDataHubRoutes = require('./routes/newsdatahub');
 const worldnewsRoutes = require('./routes/worldnews');
 const worldnewsAdminRoute = require('./routes/worldnews_admin');
+const jobRoutes = require('./routes/jobRoutes');
 
 const app = express();
 // Middleware
@@ -27,5 +28,6 @@ app.use('/api/newsdata', newsDataRoutes);
 app.use('/api/newsdatahub', newsDataHubRoutes);
 app.use('/api/worldnews', worldnewsRoutes);
 app.use('/api/worldnews_admin', worldnewsAdminRoute);
+app.use('/api/admin/jobs', jobRoutes);
 
 module.exports = app;
