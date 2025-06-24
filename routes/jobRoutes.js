@@ -2,26 +2,8 @@ const express = require('express');
 const router = express.Router();
 const JobRun = require('../models/JobRun');
 const NewsService = require('../services/NewsService');
-const jobStatus = require('../jobs/jobStatus'); // Adjust path if needed
-
-function throttle(func, limit) {
-    let lastFunc;
-    let lastRan;
-    return function(...args) {
-        if (!lastRan) {
-            func.apply(this, args);
-            lastRan = Date.now();
-        } else {
-            clearTimeout(lastFunc);
-            lastFunc = setTimeout(() => {
-                if ((Date.now() - lastRan) >= limit) {
-                    func.apply(this, args);
-                    lastRan = Date.now();
-                }
-            }, limit - (Date.now() - lastRan));
-        }
-    };
-}
+const jobStatus = require('../jobs/jobStatus');
+const throttle = require('../utils/throttle');
 
 router.get('/history', async (req, res) => {
     try {

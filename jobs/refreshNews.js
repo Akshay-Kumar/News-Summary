@@ -1,27 +1,8 @@
 const NewsService = require('../services/NewsService');
 const JobRun = require('../models/JobRun');
 const jobStatus = require('./jobStatus');
-
-const intervalMinutes = 120;
-
-function throttle(func, limit) {
-    let lastFunc;
-    let lastRan;
-    return function(...args) {
-        if (!lastRan) {
-            func.apply(this, args);
-            lastRan = Date.now();
-        } else {
-            clearTimeout(lastFunc);
-            lastFunc = setTimeout(() => {
-                if ((Date.now() - lastRan) >= limit) {
-                    func.apply(this, args);
-                    lastRan = Date.now();
-                }
-            }, limit - (Date.now() - lastRan));
-        }
-    };
-}
+const throttle = require('../utils/throttle');
+const intervalMinutes = 120; // fetch news after every 2 hours
 
 const refreshNews = async () => {
     const jobName = 'refreshNews';
