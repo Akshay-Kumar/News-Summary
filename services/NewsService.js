@@ -2,10 +2,10 @@ const axios = require('axios');
 const crypto = require('crypto');
 require('dotenv').config();
 const WorldNewsArticle = require('../models/WorldNewsArticle');
+const KeyManager = require('../utils/KeyManager');
 const fs = require('fs');
 const path = require('path');
 const WORLD_NEWS_BASE_URL = 'https://api.worldnewsapi.com';
-const WORLD_NEWS_API_KEY = process.env.WORLDNEWS_API_KEY;
 const api_article_fetch_limit = 25;
 const db_article_fetch_limit = 25;
 const search_news_api_route = 'search-news';
@@ -44,6 +44,11 @@ class NewsService {
         let retries = 0;
 
         while (NewsService.api_quota_left < 0 && retries < MAX_RETRIES) {
+            // Check if all keys exhausted before waiting
+            if (KeyManager.allKeysExhausted(NewsService.api_quota_left)) {
+                throw new Error("[NewsService] All API keys exhausted. Cannot fetch news.");
+            }
+
             let warn_msg = `[NewsService] API quota is negative (${NewsService.api_quota_left}). Retrying in 30 minutes... [Attempt ${retries + 1}]`;
             console.warn(warn_msg);
             progressMsg(warn_msg);
@@ -51,7 +56,7 @@ class NewsService {
 
             // Ping a lightweight API route (e.g., top-news for a single country) just to check quota
             try {
-                const url = `${WORLD_NEWS_BASE_URL}/${top_news_api_route}?api-key=${WORLD_NEWS_API_KEY}&language=en&number=1`;
+                const url = `${WORLD_NEWS_BASE_URL}/${top_news_api_route}?api-key=${KeyManager.getActiveApiKey()}&language=en&number=1`;
                 const res = await axios.get(url);
                 const newQuota = parseFloat(res.headers['x-api-quota-left']);
                 NewsService.api_quota_left = newQuota;
@@ -70,104 +75,78 @@ class NewsService {
         }
     }
 
-    static async getAllNews(fetchTopNews, fetchNewsBySourceCountry, fetchNewsByCategory, fetchNewsByNewsSources, progressCallback = () => {}, progressMsg = () => {}) {
+    static async getAllNews(
+        fetchTopNews,
+        fetchNewsBySourceCountry,
+        fetchNewsByCategory,
+        fetchNewsByNewsSources,
+        progressCallback = () => {},
+        progressMsg = () => {}
+    ) {
         let language = 'en';
-        let headlines_only = 'false';
         let sort_by = 'publish-time';
         let sort_direction = 'DESC';
 
         // Reset counter
         NewsService.savedCount = 0;
 
-        try {
-            if (NewsService.api_quota_left < 0) {
-                await NewsService.waitUntilQuotaIsPositive(progressMsg);
+        let baseParams = {
+            base_url: WORLD_NEWS_BASE_URL,
+            api_key: KeyManager.getActiveApiKey(),
+            language: "en",
+            sort_by,
+            sort_direction
+        };
+
+        const fetchFunctions = [
+            { enabled: fetchTopNews, fn: NewsService.getTopNews, name: 'TopNews', extraParams: { api_route: top_news_api_route, headlines_only: 'false' } },
+            { enabled: fetchNewsBySourceCountry, fn: NewsService.getNewsBySourceCountry, name: 'NewsBySourceCountry', extraParams: { api_route: search_news_api_route } },
+            { enabled: fetchNewsByCategory, fn: NewsService.getNewsByCategory, name: 'NewsByCategory', extraParams: { api_route: search_news_api_route } },
+            { enabled: fetchNewsByNewsSources, fn: NewsService.getNewsByNewsSources, name: 'NewsByNewsSources', extraParams: { api_route: search_news_api_route } }
+        ];
+
+        for (const fetchItem of fetchFunctions) {
+            if (!fetchItem.enabled) continue;
+
+            if (NewsService.api_quota_left < 0 && KeyManager.allKeysExhausted(NewsService.api_quota_left)) {
+                console.error(`[NewsService] All API keys exhausted. Stopping fetch for ${fetchItem.name}.`);
+                break;
             }
 
-            if (fetchTopNews && NewsService.api_quota_left >= 0) {
-                console.log("[NewsService] Fetching TopNews from API.");
-                await NewsService.getTopNews(
-                        WORLD_NEWS_BASE_URL,
-                        top_news_api_route,
-                        WORLD_NEWS_API_KEY,
-                        language,
-                        headlines_only,
-                        sort_by,
-                        sort_direction,
-                        progressCallback,
-                        progressMsg
-                    );
-            }
+            console.log(`[NewsService] Fetching ${fetchItem.name} from API.`);
 
-            if (fetchNewsBySourceCountry && NewsService.api_quota_left >= 0) {
-                console.log("[NewsService] Fetching NewsBySourceCountry from API.");
-                await NewsService.getNewsBySourceCountry(
-                    WORLD_NEWS_BASE_URL,
-                    search_news_api_route,
-                    WORLD_NEWS_API_KEY,
-                    language,
-                    sort_by,
-                    sort_direction,
+            try {
+                await fetchItem.fn({
+                    ...baseParams,
+                    ...fetchItem.extraParams,
                     progressCallback,
                     progressMsg
-                );
+                });
+            } catch (error) {
+                console.error(`[NewsService] Error fetching ${fetchItem.name}:`, error.message || error);
             }
-
-            if (fetchNewsByCategory && NewsService.api_quota_left >= 0) {
-                console.log("[NewsService] Fetching NewsByCategory from API.");
-                await NewsService.getNewsByCategory(
-                        WORLD_NEWS_BASE_URL,
-                        search_news_api_route,
-                        WORLD_NEWS_API_KEY,
-                        language,
-                        sort_by,
-                        sort_direction,
-                        progressCallback,
-                        progressMsg
-                    );
-            }
-
-            if (fetchNewsByNewsSources && NewsService.api_quota_left >= 0) {
-                console.log("[NewsService] Fetching NewsByNewsSources from API.");
-                await NewsService.getNewsByNewsSources(
-                        WORLD_NEWS_BASE_URL,
-                        search_news_api_route,
-                        WORLD_NEWS_API_KEY,
-                        language,
-                        sort_by,
-                        sort_direction,
-                        progressCallback,
-                        progressMsg
-                    );
-            }
-
-        } catch (error) {
-            console.error('[NewsService] Error occurred while fetching news articles.', error);
         }
 
         return NewsService.savedCount;
     }
 
-    static async getTopNews(api_base_url, api_route, api_key, language = 'en', headlines_only = 'false', sort_by = 'publish-time', sort_direction = 'DESC', progressCallback = () => {}, progressMsg = () => {}){
-        if (NewsService.api_quota_left < 0) {
-            await NewsService.waitUntilQuotaIsPositive(progressMsg);
-        }
+    static async getTopNews({ base_url, api_route, api_key, language = 'en', headlines_only = 'false', sort_by = 'publish-time', sort_direction = 'DESC', progressCallback, progressMsg }){
 
-        let top_news_params = {
-            base_url: api_base_url,
-            api_route: api_route,
-            api_key: api_key,
-            language: language,
-            add_params: `&headlines-only=${headlines_only}&sort=${sort_by}&sort-direction=${sort_direction}`
+        let baseParams  = {
+            base_url,
+            api_route,
+            api_key,
+            language,
+            extra: `&headlines-only=${headlines_only}&sort=${sort_by}&sort-direction=${sort_direction}`
         };
         let countries = await NewsService.getMetaData('country');
         const totalCountries = countries.length;
         for(let i = 0; i < totalCountries; i++){
             const country = countries[i];
-            top_news_params.country = country.code;
-            let top_news_url = await NewsService.buildUrl(top_news_params);
+            const params = { ...baseParams, country: country.code }; // ✅ keep params object
+            const url = await NewsService.buildUrl(params);
             console.log(`[NewsService] fetching top news for: ${country.name}`);
-            let result = await NewsService.fetchAndCacheNews({url: top_news_url, api_route: api_route});
+            let result = await NewsService.fetchAndCacheNews({url: url, api_route: api_route, params });
             if(!result.success){
                 console.log(`[NewsService] Failed fetching top news for: ${country.name}`)
             }
@@ -175,7 +154,7 @@ class NewsService {
                 console.log(`[NewsService] X-API-Quota-Left for today: ${result.x_api_quota_left}`)
             }
             // update api quota left and article saved count
-            NewsService.api_quota_left = parseFloat(result.x_api_quota_left);
+            NewsService.api_quota_left = result.x_api_quota_left;
             NewsService.savedCount += result.savedCount;
 
             progressCallback(i + 1, totalCountries, 'TopNews'); // 🟢 progress update
@@ -185,26 +164,26 @@ class NewsService {
         return NewsService.savedCount;
     }
 
-    static async getNewsBySourceCountry(api_base_url, api_route, api_key, language = 'en', sort_by = 'publish-time', sort_direction = 'DESC', progressCallback = () => {}, progressMsg = () => {}){
+    static async getNewsBySourceCountry({base_url, api_route, api_key, language = 'en', sort_by = 'publish-time', sort_direction = 'DESC', progressCallback, progressMsg}){
         if (NewsService.api_quota_left < 0) {
             await NewsService.waitUntilQuotaIsPositive(progressMsg);
         }
 
-        let search_news_by_country_params = {
-            base_url: api_base_url,
-            api_route: api_route,
-            api_key: api_key,
-            language: language,
-            add_params: `&sort=${sort_by}&sort-direction=${sort_direction}`
+        let baseParams = {
+            base_url,
+            api_route,
+            api_key,
+            language,
+            extra: `&sort=${sort_by}&sort-direction=${sort_direction}`
         };
         let countries = await NewsService.getMetaData('country');
         const totalCountries = countries.length;
         for(let i = 0; i < totalCountries; i++){
             const country = countries[i];
-            search_news_by_country_params.country = country.code;
-            let search_news_by_country_url = await NewsService.buildUrl(search_news_by_country_params);
+            const params = { ...baseParams, country: country.code };
+            const url = await NewsService.buildUrl(params);
             console.log(`[NewsService] fetching news for: ${country.name}`);
-            let result = await NewsService.fetchAndCacheNews({url: search_news_by_country_url, api_route: api_route});
+            let result = await NewsService.fetchAndCacheNews({url: url, api_route: api_route, params });
             if(!result.success){
                 console.log(`[NewsService] Failed fetching news for: ${country.name}`)
             }
@@ -212,7 +191,7 @@ class NewsService {
                 console.log(`[NewsService] X-API-Quota-Left for today: ${result.x_api_quota_left}`)
             }
             // update api quota left and article saved count
-            NewsService.api_quota_left = parseFloat(result.x_api_quota_left);
+            NewsService.api_quota_left = result.x_api_quota_left;
             NewsService.savedCount += result.savedCount;
 
             progressCallback(i + 1, totalCountries, 'NewsBySourceCountry'); // 🟢 progress update
@@ -222,26 +201,25 @@ class NewsService {
         return NewsService.savedCount;
     }
 
-    static async getNewsByCategory(api_base_url, api_route, api_key, language = 'en', sort_by = 'publish-time', sort_direction = 'DESC', progressCallback = () => {}, progressMsg = () => {}){
+    static async getNewsByCategory({ base_url, api_route, api_key, language = 'en', sort_by = 'publish-time', sort_direction = 'DESC', progressCallback , progressMsg }){
         if (NewsService.api_quota_left < 0) {
             await NewsService.waitUntilQuotaIsPositive(progressMsg);
         }
 
-        let search_news_by_category_params = {
-            base_url: api_base_url,
-            api_route: api_route,
-            api_key: api_key,
-            language: language,
-            add_params: `&sort=${sort_by}&sort-direction=${sort_direction}`
+        let baseParams = {
+            base_url,
+            api_route,
+            api_key,
+            language,
+            extra: `&sort=${sort_by}&sort-direction=${sort_direction}`
         };
         let categories = await NewsService.getMetaData('category');
         let totalCategories = categories.length;
         for(let i = 0; i < totalCategories; i++){
             const category = categories[i];
-            search_news_by_category_params.category = category.code;
-            let search_news_by_category_url = await NewsService.buildUrl(search_news_by_category_params);
-            console.log(`[NewsService] fetching news for: ${category.name}`);
-            let result = await NewsService.fetchAndCacheNews({url: search_news_by_category_url, api_route: api_route});
+            const params = { ...baseParams, category: category.code };
+            const url = await NewsService.buildUrl(params);
+            let result = await NewsService.fetchAndCacheNews({ url, api_route, params });
             if(!result.success){
                 console.log(`[NewsService] Failed fetching news for: ${category.name}`)
             }
@@ -249,7 +227,7 @@ class NewsService {
                 console.log(`[NewsService] X-API-Quota-Left for today: ${result.x_api_quota_left}`)
             }
             // update api quota left and article saved count
-            NewsService.api_quota_left = parseFloat(result.x_api_quota_left);
+            NewsService.api_quota_left = result.x_api_quota_left;
             NewsService.savedCount += result.savedCount;
 
             progressCallback(i + 1, totalCategories, 'NewsByCategory'); // 🟢 progress update
@@ -259,26 +237,25 @@ class NewsService {
         return NewsService.savedCount;
     }
 
-    static async getNewsByNewsSources(api_base_url, api_route, api_key, language = 'en', sort_by = 'publish-time', sort_direction = 'DESC', progressCallback = () => {}, progressMsg = () => {}){
+    static async getNewsByNewsSources({ base_url, api_route, api_key, language = 'en', sort_by = 'publish-time', sort_direction = 'DESC', progressCallback , progressMsg }){
         if (NewsService.api_quota_left < 0) {
             await NewsService.waitUntilQuotaIsPositive(progressMsg);
         }
 
-        let search_news_by_source_params = {
-            base_url: api_base_url,
-            api_route: api_route,
-            api_key: api_key,
-            language: language,
-            add_params: `&sort=${sort_by}&sort-direction=${sort_direction}`
+        let baseParams = {
+            base_url,
+            api_route,
+            api_key,
+            language,
+            extra: `&sort=${sort_by}&sort-direction=${sort_direction}`
         };
         let sources = await NewsService.getMetaData('source');
         let totalSources = sources.length;
         for(let i = 0; i < totalSources; i++){
             const source = sources[i];
-            search_news_by_source_params.source = source.code;
-            let search_news_by_source_url = await NewsService.buildUrl(search_news_by_source_params);
-            console.log(`[NewsService] fetching news for: ${source.name}`);
-            let result = await NewsService.fetchAndCacheNews({url: search_news_by_source_url, api_route: api_route, source: source.code});
+            const params = { ...baseParams, source: source.code };
+            const url = await NewsService.buildUrl(params);
+            let result = await NewsService.fetchAndCacheNews({ url, api_route, params });
             if(!result.success){
                 console.log(`[NewsService] Failed fetching news for: ${source.name}`)
             }
@@ -286,7 +263,7 @@ class NewsService {
                 console.log(`[NewsService] X-API-Quota-Left for today: ${result.x_api_quota_left}`)
             }
             // update api quota left and article saved count
-            NewsService.api_quota_left = parseFloat(result.x_api_quota_left);
+            NewsService.api_quota_left = result.x_api_quota_left;
             NewsService.savedCount += result.savedCount;
 
             progressCallback(i + 1, totalSources, 'NewsByNewsSources'); // 🟢 progress update
@@ -296,40 +273,43 @@ class NewsService {
         return NewsService.savedCount;
     }
 
-    static async buildUrl({ base_url, api_route, api_key, country, source, text, category, language, article_fetch_limit, add_params }) {
+    static async buildUrl(params) {
+        const {
+            base_url,
+            api_route,
+            api_key,
+            country,
+            source,
+            text,
+            category,
+            language,
+            article_fetch_limit,
+            extra = '' // rename add_params → extra
+        } = params;
+
         let url = `${base_url}/${api_route}?api-key=${api_key}`;
 
-        // World News API allows categories — map your "general" to nothing
         if (category && category !== 'general') {
             url += `&categories=${category}`;
         }
-
-        // World News API allows search text
         if (text) {
             url += `&text=${encodeURIComponent(text)}`;
         }
-
-        // either news-source or source-country must be used not together
-        if(country){
-            url += `&source-country=${country}`
+        if (country) {
+            url += `&source-country=${country}`;
+        } else if (source) {
+            url += `&news-sources=${source}`;
         }
-        else if(source){
-            url += `&news-sources=${source}`
-        }
-
-        // limit number of results
-        if(article_fetch_limit){
+        if (article_fetch_limit) {
             url += `&number=${article_fetch_limit}`;
         }
 
-        // Set language, default = en
         url += `&language=${language || 'en'}`;
-
-        // sort by publish date in descending order
-        url += add_params;
+        url += extra;
 
         return url;
     }
+
 
     static async saveArticleToMongo(article, source) {
         try {
@@ -364,7 +344,7 @@ class NewsService {
      * Fetch fresh news from external API
      * Cache it into MongoDB
      */
-    static async fetchAndCacheNews({url = '', api_route = '', source = '', perArticleCallback = () => {}} = {}) {
+    static async fetchAndCacheNews({url = '', api_route = '', source = '', params= {}, perArticleCallback = () => {}} = {}) {
         try {
             // define timeout
             const CONN_TIMEOUT = 500000;
@@ -383,7 +363,23 @@ class NewsService {
             const response = await axios.get(url, {
                 timeout: CONN_TIMEOUT
             });
-            const x_api_quota_left = response.headers['x-api-quota-left']
+            const x_api_quota_left = parseFloat(response.headers['x-api-quota-left']);
+            if (!isNaN(x_api_quota_left)) {
+                NewsService.api_quota_left = x_api_quota_left;
+                if (x_api_quota_left <= 0) {
+                    console.warn(`[NewsService] API quota exhausted.`);
+
+                    // Check if all keys exhausted
+                    if (KeyManager.allKeysExhausted(NewsService.api_quota_left)) {
+                        throw new Error("[NewsService] All API keys exhausted. Cannot fetch news.");
+                    }
+
+                    const newKey = KeyManager.markKeyExhausted();
+                    const updated_url = await NewsService.buildUrl({ ...params, api_key: newKey });
+                    return NewsService.fetchAndCacheNews({ url: updated_url, api_route, params, perArticleCallback });
+                }
+            }
+
             if(response.status !== 200){
                 console.error("[NewsService] Error occurred while fetching API request", response.statusText);
                 return { success: false, savedCount };
@@ -410,9 +406,19 @@ class NewsService {
             return { success: true, savedCount, x_api_quota_left: x_api_quota_left };
 
         } catch (error) {
-            console.error('[NewsService] Error fetching news:', error.message);
+            if (error.response && [401, 402, 403].includes(error.response.status)) {
+                console.warn(`[NewsService] Unauthorized with key index. Rotating...`);
+                // Check if all keys exhausted before rotating
+                if (KeyManager.allKeysExhausted(NewsService.api_quota_left)) {
+                    throw new Error("[NewsService] All API keys exhausted. Cannot fetch news.");
+                }
+                const newKey = KeyManager.rotateApiKey();
+                const updated_url = await NewsService.buildUrl({ ...params, api_key: newKey });
+                return NewsService.fetchAndCacheNews({ url: updated_url, api_route, params, perArticleCallback });
+            }
             throw error;
         }
+
     }
 
     static async processTopNews(apiResponse) {
@@ -470,7 +476,7 @@ class NewsService {
             }
         }
 
-        console.log(`[NewsService] Loading cached news with query:`, query);
+        console.log(`[NewsService] Loading cached news with query: ${JSON.stringify(query, null, 2)}`);
 
         const articles = await WorldNewsArticle.find(query)
             .sort({ publishedAt: -1 })

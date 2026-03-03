@@ -6,12 +6,14 @@
         <country code="us">USA</country>
         <country code="ru">Russia</country>
         <country code="gb">UK</country>
-        <country code="au">Australia</country>
+        <!-- 
+		<country code="au">Australia</country>
         <country code="de">Germany</country>
         <country code="fr">France</country>
         <country code="jp">Japan</country>
         <country code="kr">South Korea</country>
         <country code="br">Brazil</country>
+		-->
         <country code="bd">Bangladesh</country>
         <country code="pk">Pakistan</country>
     </countries>
@@ -28,6 +30,7 @@
         <source code="hindustantimes">Hindustan Times</source>
         <source code="indiatoday">India Today</source>
         <source code="cbc">CBC News</source>
+		<source code="aljazeera">Aljazeera</source>
     </sources>
     <categories>
         <category code="technology">Technology</category>

@@ -1,5 +1,27 @@
 #!/usr/bin/env node
 // backend/bin/www
+// --- Logging Setup ---
+const fs = require("fs");
+
+const logFile = fs.createWriteStream("app.log", { flags: "a" }); // append mode
+const logStdout = process.stdout;
+
+console.log = function (...args) {
+  const timestamp = new Date().toISOString();
+  const message = `[${timestamp}] ${args.join(" ")}\n`;
+
+  logFile.write(message);   // save to file
+  logStdout.write(message); // still print in terminal
+};
+
+console.error = function (...args) {
+  const timestamp = new Date().toISOString();
+  const message = `[${timestamp}] ERROR: ${args.join(" ")}\n`;
+
+  logFile.write(message);
+  logStdout.write(message);
+};
+
 const app = require('../app');
 const http = require('http');
 const connectDB = require('../utils/db');

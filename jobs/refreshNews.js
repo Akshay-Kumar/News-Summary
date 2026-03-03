@@ -2,7 +2,7 @@ const NewsService = require('../services/NewsService');
 const JobRun = require('../models/JobRun');
 const jobStatus = require('./jobStatus');
 const throttle = require('../utils/throttle');
-const intervalMinutes = 120; // fetch news after every 2 hours
+const intervalMinutes = 360; // fetch news after every 6 hours
 
 const refreshNews = async () => {
     const jobName = 'refreshNews';
