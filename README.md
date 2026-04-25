@@ -28,6 +28,43 @@
 
 ---
 
+# ⚙️ Environment Setup
+
+## **1. Create `.env` file**
+
+Create a `.env` file in the root directory and add:
+
+```env
+# Database
+MONGO_URI=mongodb://localhost:27017/newsdb
+# OR use Mongo Atlas:
+# MONGO_URI=<mongodb Atlas connection string>
+
+# Security
+JWT_SECRET=your_jwt_secret_key
+
+# External APIs
+NEWS_API_KEY=your_newsapi_key
+HF_TOKEN=your_huggingface_api_key
+OPENAI_API_KEY=your_openai_api_key
+
+# Server
+PORT=5000
+```
+
+---
+
+## ⚠️ Notes
+
+- If using Docker, replace Mongo URI with:
+  ```
+  mongodb://mongo:27017/newsdb
+  ```
+- Do NOT commit `.env` to GitHub
+- Create `.env.example` instead for sharing
+
+---
+
 # 🐳 Docker Deployment
 
 ---
@@ -44,7 +81,7 @@ RUN npm install --production
 
 COPY . .
 
-EXPOSE 8000
+EXPOSE 5000
 
 CMD ["npm", "start"]
 ```
@@ -54,14 +91,16 @@ CMD ["npm", "start"]
 ## **2. Docker Compose**
 
 ```yaml
+version: "3.9"
+
 services:
   backend:
     build: .
     container_name: news-backend
     ports:
-      - "8000:8000"
-    environment:
-      - NEWS_API_KEY=your_api_key
+      - "5000:5000"
+    env_file:
+      - .env
     restart: unless-stopped
 ```
 
@@ -77,11 +116,11 @@ docker compose up -d --build
 
 ## **4. Access API**
 
-http://localhost:8000/docs
+http://localhost:5000
 
 ---
 
-# 💻 **Local Development**
+# 💻 Local Development
 
 ## **1. Clone Repository**
 ```bash
@@ -89,19 +128,23 @@ git clone https://github.com/Akshay-Kumar/News-Summary.git
 cd News-Summary
 ```
 
+---
+
 ## **2. Install Dependencies**
 ```bash
-pip install -r requirements.txt
-```
-
-## **3. Run Server**
-```bash
-uvicorn main:app --reload
+npm install
 ```
 
 ---
 
-## 📡 **API Endpoints**
+## **3. Run Server**
+```bash
+npm start
+```
+
+---
+
+## 📡 API Endpoints
 
 | Method | Endpoint | Description |
 |--------|---------|------------|
@@ -111,25 +154,19 @@ uvicorn main:app --reload
 
 ---
 
-## ⚙️ **Environment Variables**
-
-```
-NEWS_API_KEY=your_api_key
-```
-
----
-
-## ⚠️ **Notes**
+## ⚠️ Notes
 
 - Ensure backend is running before frontend
-- Use a valid API key
+- Make sure `PORT` in `.env` matches Docker / frontend config
 
 ---
 
-## **Contributing**
+## Contributing
+
 Fork and submit PRs
 
 ---
 
-## **License**
+## License
+
 MIT License
