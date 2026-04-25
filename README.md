@@ -1,61 +1,123 @@
-### **News-Summary Backend**  
-🚀 A Node.js-powered backend that fetches news articles from a news API and serves them to the client.
+# 📰 News-Summary Backend
+🚀 FastAPI backend for fetching and serving news articles.
 
-## **Features**  
-✅ Fetches real-time news articles from a third-party API  
-✅ Serves news data to the client via RESTful endpoints  
-✅ Supports filtering and categorization of news articles  
-✅ Lightweight and efficient  
+---
 
-## **Tech Stack**  
-- **Node.js**  
-- **Express.js**  
-- **Axios** (for making API requests)  
-- **Dotenv** (for managing API keys)  
+## 🧠 **Overview**
+- Fetches news from external APIs
+- Provides REST endpoints
+- Supports filtering by category and source
 
-## **Getting Started**  
+---
 
-### **1. Clone the Repository**  
+## ⚙️ **Tech Stack**
+- Python 3.11
+- FastAPI
+- Uvicorn
+
+---
+
+# 🐳 **Docker Deployment**
+
+---
+
+## **1. Dockerfile**
+
+```dockerfile
+FROM python:3.11-slim
+
+WORKDIR /app
+COPY . .
+
+RUN pip install --no-cache-dir --upgrade pip \
+    && pip install --no-cache-dir -r requirements.txt
+
+EXPOSE 8000
+
+CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"]
+```
+
+---
+
+## **2. Docker Compose**
+
+```yaml
+version: "3.9"
+
+services:
+  backend:
+    build: .
+    container_name: news-backend
+    ports:
+      - "8000:8000"
+    restart: unless-stopped
+```
+
+---
+
+## **3. Run Application**
+
+```bash
+docker compose up -d --build
+```
+
+---
+
+## **4. Access API**
+
+http://localhost:8000/docs
+
+---
+
+# 💻 **Local Development**
+
+## **1. Clone Repository**
 ```bash
 git clone https://github.com/Akshay-Kumar/News-Summary.git
 cd News-Summary
 ```
 
-### **2. Install Dependencies**  
+## **2. Install Dependencies**
 ```bash
-npm install
+pip install -r requirements.txt
 ```
 
-### **3. Set Up Environment Variables**  
-Create a `.env` file in the root directory and add:  
-```plaintext
-MONGO_URI=<mongodb Atlas connection string>
-JWT_SECRET=<jwt_secret_key>
-NEWS_API_KEY=<newsapi key>
-HF_TOKEN=<hugging face api key>
-OPENAI_API_KEY=<open api key>
-PORT=5000
+## **3. Run Server**
+```bash
+uvicorn main:app --reload
 ```
 
-### **4. Run the Server**  
-```bash
-npm start
-```
-or for development:
-```bash
-npm run dev
-```
+---
 
-### **5. API Endpoints**  
+## 📡 **API Endpoints**
+
 | Method | Endpoint | Description |
 |--------|---------|------------|
-| GET    | `/news` | Fetch latest news articles |
-| GET    | `/news?category=technology` | Fetch news by category |
-| GET    | `/news?source=bbc-news` | Fetch news from a specific source |
+| GET | `/news` | Fetch latest news |
+| GET | `/news?category=technology` | Filter by category |
+| GET | `/news?source=bbc-news` | Filter by source |
 
-## **Contributing**  
-Feel free to fork this repository and submit a pull request if you have improvements!  
+---
 
-## **License**  
-📝 MIT License
+## ⚙️ **Environment Variables**
 
+```
+NEWS_API_KEY=your_api_key
+```
+
+---
+
+## ⚠️ **Notes**
+
+- Ensure backend is running before frontend
+- Use a valid API key
+
+---
+
+## **Contributing**
+Fork and submit PRs
+
+---
+
+## **License**
+MIT License
