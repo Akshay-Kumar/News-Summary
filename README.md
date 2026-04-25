@@ -1,40 +1,52 @@
 # 📰 News-Summary Backend
-🚀 FastAPI backend for fetching and serving news articles.
+🚀 A Node.js backend service that fetches and serves news articles.
 
 ---
 
-## 🧠 **Overview**
+## 🧠 Overview
+
 - Fetches news from external APIs
 - Provides REST endpoints
 - Supports filtering by category and source
 
 ---
 
-## ⚙️ **Tech Stack**
-- Python 3.11
-- FastAPI
-- Uvicorn
+## ⚙️ Tech Stack
+
+- Node.js
+- Express.js
+- Axios / Fetch
 
 ---
 
-# 🐳 **Docker Deployment**
+## 🚀 Features
+
+✅ Fetch latest news  
+✅ Filter by category  
+✅ Filter by source  
+✅ REST API
+
+---
+
+# 🐳 Docker Deployment
 
 ---
 
 ## **1. Dockerfile**
 
 ```dockerfile
-FROM python:3.11-slim
+FROM node:18-alpine
 
 WORKDIR /app
-COPY . .
 
-RUN pip install --no-cache-dir --upgrade pip \
-    && pip install --no-cache-dir -r requirements.txt
+COPY package*.json ./
+RUN npm install --production
+
+COPY . .
 
 EXPOSE 8000
 
-CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"]
+CMD ["npm", "start"]
 ```
 
 ---
@@ -42,14 +54,14 @@ CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"]
 ## **2. Docker Compose**
 
 ```yaml
-version: "3.9"
-
 services:
   backend:
     build: .
     container_name: news-backend
     ports:
       - "8000:8000"
+    environment:
+      - NEWS_API_KEY=your_api_key
     restart: unless-stopped
 ```
 
