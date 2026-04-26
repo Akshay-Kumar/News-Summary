@@ -44,12 +44,15 @@ MONGO_URI=mongodb://localhost:27017/newsdb
 JWT_SECRET=your_jwt_secret_key
 
 # External APIs
-NEWS_API_KEY=your_newsapi_key
+WORLDNEWS_API_KEYS=your_newsapi_key1,your_newsapi_key2,your_newsapi_key3
 HF_TOKEN=your_huggingface_api_key
 OPENAI_API_KEY=your_openai_api_key
 
 # Server
 PORT=5000
+
+DOMAIN=yourdomain.com
+EMAIL=your@email.com
 ```
 
 ---
