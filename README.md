@@ -84,7 +84,7 @@ RUN npm install --production
 
 COPY . .
 
-EXPOSE 5000
+EXPOSE 5001
 
 CMD ["npm", "start"]
 ```
@@ -101,7 +101,7 @@ services:
     build: .
     container_name: news-backend
     ports:
-      - "5000:5000"
+      - "5001:5001"
     env_file:
       - .env
     restart: unless-stopped
