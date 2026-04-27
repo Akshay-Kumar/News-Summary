@@ -50,9 +50,6 @@ OPENAI_API_KEY=your_openai_api_key
 
 # Server
 PORT=5000
-
-DOMAIN=yourdomain.com
-EMAIL=your@email.com
 ```
 
 ---
@@ -75,17 +72,23 @@ EMAIL=your@email.com
 ## **1. Dockerfile**
 
 ```dockerfile
+# Use lightweight Node image
 FROM node:18-alpine
 
+# Create app directory
 WORKDIR /app
 
+# Install dependencies first (better caching)
 COPY package*.json ./
 RUN npm install --production
 
+# Copy rest of the code
 COPY . .
 
-EXPOSE 5001
+# Expose backend port
+EXPOSE 5000
 
+# Start server
 CMD ["npm", "start"]
 ```
 
@@ -94,14 +97,12 @@ CMD ["npm", "start"]
 ## **2. Docker Compose**
 
 ```yaml
-version: "3.9"
-
 services:
   backend:
     build: .
     container_name: news-backend
     ports:
-      - "5001:5001"
+      - "5000:5000"
     env_file:
       - .env
     restart: unless-stopped
