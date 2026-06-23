@@ -16,6 +16,7 @@
 		-->
         <country code="bd">Bangladesh</country>
         <country code="pk">Pakistan</country>
+        <country code="il">Israel</country>
     </countries>
     <sources>
         <source code="cnn">CNN</source>
@@ -31,6 +32,8 @@
         <source code="indiatoday">India Today</source>
         <source code="cbc">CBC News</source>
 		<source code="aljazeera">Aljazeera</source>
+        <source code="france24">France 24</source>
+        <source code="theguardian">The Guardian</source>
     </sources>
     <categories>
         <category code="technology">Technology</category>
